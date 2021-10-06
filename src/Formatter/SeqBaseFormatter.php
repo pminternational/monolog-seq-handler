@@ -2,9 +2,9 @@
 
 namespace Msschl\Monolog\Formatter;
 
-use DateTime;
-use Monolog\Formatter\FormatterInterface;
+use Monolog\DateTimeImmutable;
 use Monolog\Formatter\JsonFormatter;
+use Throwable;
 
 /**
  * This file is part of the msschl\monolog-seq-handler package.
@@ -23,7 +23,7 @@ abstract class SeqBaseFormatter extends JsonFormatter
      *
      * @var array
      */
-    protected $logLevelMap = [
+    protected array $logLevelMap = [
         '100' => 'Debug',
         '200' => 'Information',
         '250' => 'Information',
@@ -37,12 +37,12 @@ abstract class SeqBaseFormatter extends JsonFormatter
     /**
      * Initializes a new instance of the {@see SeqBaseFormatter} class.
      *
-     * @param  int $batchMode The json batch mode.
+     * @param int $batchMode The json batch mode.
      */
     function __construct($batchMode)
     {
         $this->appendNewline = false;
-        $this->batchMode = $batchMode;
+        $this->batchMode     = $batchMode;
     }
 
     /**
@@ -50,27 +50,31 @@ abstract class SeqBaseFormatter extends JsonFormatter
      *
      * @return string
      */
-    public abstract function getContentType() : string;
+    public abstract function getContentType(): string;
 
     /**
      * Normalizes the log record array.
      *
-     * @param array $recod The log record to normalize.
+     * @param array $data The log record to normalize.
+     * @param int   $depth
+     *
      * @return array
      */
-    protected function normalize($record, $depth = 0)
+    protected function normalize($data, int $depth = 0): array
     {
-        if (!is_array($record) && !$record instanceof \Traversable) {
+        if (!is_array($data) && !$data instanceof \Traversable) {
             /* istanbul ignore next */
-            throw new \InvalidArgumentException('Array/Traversable expected, got ' . gettype($record) . ' / ' . get_class($record));
+            throw new \InvalidArgumentException(
+                'Array/Traversable expected, got '.gettype($data).' / '.get_class($data)
+            );
         }
 
         $normalized = [];
 
-        foreach ($record as $key => $value) {
+        foreach ($data as $key => $value) {
             $key = SeqBaseFormatter::ConvertSnakeCaseToPascalCase($key);
 
-            $this->{'process' . $key}($normalized, $value);
+            $this->{'process'.$key}($normalized, $value);
         }
 
         return $normalized;
@@ -79,8 +83,9 @@ abstract class SeqBaseFormatter extends JsonFormatter
     /**
      * Processes the log message.
      *
-     * @param  array  &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  string $message     The log message.
+     * @param array  &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param string  $message    The log message.
+     *
      * @return void
      */
     protected abstract function processMessage(array &$normalized, string $message);
@@ -88,8 +93,9 @@ abstract class SeqBaseFormatter extends JsonFormatter
     /**
      * Processes the context array.
      *
-     * @param  array &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  array $message     The context array.
+     * @param array &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param array  $context    The context array.
+     *
      * @return void
      */
     protected abstract function processContext(array &$normalized, array $context);
@@ -97,8 +103,9 @@ abstract class SeqBaseFormatter extends JsonFormatter
     /**
      * Processes the log level.
      *
-     * @param  array &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  int   $message     The log level.
+     * @param array &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param int    $level      The log level.
+     *
      * @return void
      */
     protected abstract function processLevel(array &$normalized, int $level);
@@ -106,8 +113,9 @@ abstract class SeqBaseFormatter extends JsonFormatter
     /**
      * Processes the log level name.
      *
-     * @param  array  &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  string $message     The log level name.
+     * @param array  &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param string  $levelName  The log level name.
+     *
      * @return void
      */
     protected abstract function processLevelName(array &$normalized, string $levelName);
@@ -115,8 +123,9 @@ abstract class SeqBaseFormatter extends JsonFormatter
     /**
      * Processes the channel name.
      *
-     * @param  array  &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  string $message     The log channel name.
+     * @param array  &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param string  $name       The log channel name.
+     *
      * @return void
      */
     protected abstract function processChannel(array &$normalized, string $name);
@@ -124,51 +133,32 @@ abstract class SeqBaseFormatter extends JsonFormatter
     /**
      * Processes the log timestamp.
      *
-     * @param  array    &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  DateTime $message     The log timestamp.
+     * @param array    &        $normalized Reference to the normalized array, where all normalized data get stored.
+     * @param DateTimeImmutable $datetime   The log timestamp.
+     *
      * @return void
      */
-    protected abstract function processDatetime(array &$normalized, DateTime $datetime);
+    protected abstract function processDatetime(array &$normalized, DateTimeImmutable $datetime);
 
     /**
      * Processes the extras array.
      *
-     * @param  array &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  array $message     The extras array.
+     * @param array &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param array  $extras     The extras array.
+     *
      * @return void
      */
     protected abstract function processExtra(array &$normalized, array $extras);
 
     /**
-     * Normalizes an exception to a string.
-     *
-     * @param  Throwable $e The throwable instance to normalize.
-     * @return string
-     */
-	protected function normalizeException($e) : string
-    {
-   		$previousText = '';
-        if ($previous = $e->getPrevious()) {
-            do {
-                $previousText .= ', ' . get_class($previous) . '(code: ' . $previous->getCode() . '): ' . $previous->getMessage() . ' at ' . $previous->getFile() . ':' . $previous->getLine();
-            } while ($previous = $previous->getPrevious());
-        }
-
-        $str = '[object] (' . get_class($e) . '(code: ' . $e->getCode() . '): ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine() . $previousText . ')';
-        if ($this->includeStacktraces) {
-            $str .= "\n[stacktrace]\n" . $e->getTraceAsString() . "\n";
-        }
-
-        return $str;
-    }
-
-    /**
      * Extracts the exception from an array.
      *
-     * @param  array  &$array The array.
-     * @return \Throwable|null
+     * @param array  &$array The array.
+     *
+     * @return Throwable|null
      */
-    protected function extractException(array &$array) {
+    protected function extractException(array &$array): ?Throwable
+    {
         $exception = $array['exception'] ?? null;
 
         if ($exception === null) {
@@ -177,7 +167,7 @@ abstract class SeqBaseFormatter extends JsonFormatter
 
         unset($array['exception']);
 
-        if (!($exception instanceof \Throwable)) {
+        if (!($exception instanceof Throwable)) {
             return null;
         }
 
@@ -187,10 +177,12 @@ abstract class SeqBaseFormatter extends JsonFormatter
     /**
      * Converts a snake case string to a pascal case string.
      *
-     * @param  string $value The string to convert.
+     * @param string|null $value The string to convert.
+     *
      * @return string
      */
-    protected static function ConvertSnakeCaseToPascalCase(string $value = null) : string {
+    protected static function ConvertSnakeCaseToPascalCase(string $value = null): string
+    {
         return str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $value)));
     }
 }

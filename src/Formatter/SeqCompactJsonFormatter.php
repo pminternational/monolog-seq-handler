@@ -2,10 +2,9 @@
 
 namespace Msschl\Monolog\Formatter;
 
-use DateTime;
-use Monolog\Formatter\FormatterInterface;
+use DateTimeInterface;
+use Monolog\DateTimeImmutable;
 use Monolog\Formatter\JsonFormatter;
-use Msschl\Monolog\Exception\InvalidCodePathException;
 
 /**
  * This file is part of the msschl\monolog-seq-handler package.
@@ -24,7 +23,7 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
      *
      * @var bool
      */
-    protected $extractContext;
+    protected bool $extractContext;
 
     /**
      * The extract extras flag.
@@ -32,30 +31,31 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
      *
      * @var bool
      */
-    protected $extractExtras;
+    protected bool $extractExtras;
 
     /**
      * Initializes a new instance of the {@see SeqCompactJsonFormatter} class.
      *
-     * @param  bool $extractContext Flag that indicates whether to extract the extras array
+     * @param bool $extractContext  Flag that indicates whether to extract the extras array
      *                              to the root or not.
-     * @param  bool $extractExtras  Flag that indicates whether to extract the context array
+     * @param bool $extractExtras   Flag that indicates whether to extract the context array
      *                              to the root or not.
      */
-	public function __construct(bool $extractContext = true, bool $extractExtras = true)
-	{
+    public function __construct(bool $extractContext = true, bool $extractExtras = true)
+    {
         $this->extractContext = $extractContext;
-        $this->extractExtras = $extractExtras;
+        $this->extractExtras  = $extractExtras;
 
         parent::__construct(JsonFormatter::BATCH_MODE_NEWLINES);
-	}
+    }
 
     /**
      * Returns a string with the content type for the seq-formatter.
      *
      * @return string
      */
-    public function getContentType() : string {
+    public function getContentType(): string
+    {
         return 'application/vnd.serilog.clef';
     }
 
@@ -64,7 +64,7 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
      *
      * @return bool
      */
-    public function getExtractContent() : bool
+    public function getExtractContent(): bool
     {
         return $this->extractContext;
     }
@@ -72,10 +72,11 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
     /**
      * Sets the flag extract content.
      *
-     * @param  bool $value The flag.
+     * @param bool $value The flag.
+     *
      * @return self
      */
-    public function setExtractContent(bool $value)
+    public function setExtractContent(bool $value): SeqCompactJsonFormatter
     {
         $this->extractContext = $value;
 
@@ -87,7 +88,7 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
      *
      * @return bool
      */
-    public function getExtractExtras()
+    public function getExtractExtras(): bool
     {
         return $this->extractExtras;
     }
@@ -95,38 +96,40 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
     /**
      * Sets the flag extract extras.
      *
-     * @param  bool $value The flag.
+     * @param bool $value The flag.
+     *
      * @return self
      */
-    public function setExtractExtras(bool $value)
+    public function setExtractExtras(bool $value): SeqCompactJsonFormatter
     {
         $this->extractExtras = $value;
 
         return $this;
     }
 
-    /**
-     * This function should never be called!!!
-     *
-     * @throws \Msschl\Monolog\Exception\InvalidCodePathException
-     */
-    protected function formatBatchJson(array $records)
-    {
-        /* istanbul ignore next */
-        throw new InvalidCodePathException();
-    }
+    // /**
+    //  * This function should never be called!!!
+    //  *
+    //  * @throws \Msschl\Monolog\Exception\InvalidCodePathException
+    //  */
+    // protected function formatBatchJson(array $records)
+    // {
+    //     /* istanbul ignore next */
+    //     throw new InvalidCodePathException();
+    // }
 
     /**
      * Processes the log message.
      *
-     * @param  array  &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  string $message     The log message.
+     * @param array  &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param string  $message    The log message.
+     *
      * @return void
      */
     protected function processMessage(array &$normalized, string $message)
     {
         $normalized['@m'] = $message;
-        if (!(strpos($message, '{') === false)) {
+        if (!(!str_contains($message, '{'))) {
             $normalized['@mt'] = $message;
         }
     }
@@ -134,8 +137,9 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
     /**
      * Processes the context array.
      *
-     * @param  array &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  array $message     The context array.
+     * @param array &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param array  $context    The context array.
+     *
      * @return void
      */
     protected function processContext(array &$normalized, array $context)
@@ -153,21 +157,23 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
     /**
      * Processes the log level.
      *
-     * @param  array &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  int   $message     The log level.
+     * @param array &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param int    $level      The log level.
+     *
      * @return void
      */
     protected function processLevel(array &$normalized, int $level)
     {
-        $normalized['@l'] = $this->logLevelMap[$level];
+        $normalized['@l']   = $this->logLevelMap[$level];
         $normalized['Code'] = $level;
     }
 
     /**
      * Processes the log level name.
      *
-     * @param  array  &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  string $message     The log level name.
+     * @param array  &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param string  $levelName  The log level name.
+     *
      * @return void
      */
     protected function processLevelName(array &$normalized, string $levelName)
@@ -178,8 +184,9 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
     /**
      * Processes the channel name.
      *
-     * @param  array  &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  string $message     The log channel name.
+     * @param array  &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param string  $name       The log channel name.
+     *
      * @return void
      */
     protected function processChannel(array &$normalized, string $name)
@@ -190,20 +197,22 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
     /**
      * Processes the log timestamp.
      *
-     * @param  array    &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  DateTime $message     The log timestamp.
+     * @param array    &        $normalized Reference to the normalized array, where all normalized data get stored.
+     * @param DateTimeImmutable $datetime
+     *
      * @return void
      */
-    protected function processDatetime(array &$normalized, DateTime $datetime)
+    protected function processDatetime(array &$normalized, DateTimeImmutable $datetime)
     {
-        $normalized['@t'] = $datetime->format(DateTime::ISO8601);
+        $normalized['@t'] = $datetime->format(DateTimeInterface::ISO8601);
     }
 
     /**
      * Processes the extras array.
      *
-     * @param  array &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  array $message     The extras array.
+     * @param array &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param array  $extras     The extras array.
+     *
      * @return void
      */
     protected function processExtra(array &$normalized, array $extras)
@@ -220,8 +229,9 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
     /**
      * Extracts the exception from the context array.
      *
-     * @param  array  &$normalized Reference to the normalized array, where all normalized data get stored.
-     * @param  array  $context     The context array.
+     * @param array  &$normalized Reference to the normalized array, where all normalized data get stored.
+     * @param array   $context    The context array.
+     *
      * @return void
      */
     private function processContextException(array &$normalized, array $context)
@@ -235,13 +245,14 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
     /**
      * Gets a normalized array.
      *
-     * @param  array $array The array to process.
+     * @param array $array The array to process.
+     *
      * @return array
      */
-    private function getNormalizedArray(array $array) : array
+    private function getNormalizedArray(array $array): array
     {
         $normalized = [];
-        $count = 1;
+        $count      = 1;
         foreach ($array as $key => $value) {
             if ($count++ >= 1000) {
                 $normalized['...'] = 'Over 1000 items, aborting normalization';
@@ -251,7 +262,7 @@ class SeqCompactJsonFormatter extends SeqBaseFormatter
             if (is_int($key)) {
                 $normalized[] = $value;
             } else {
-                $key = SeqCompactJsonFormatter::ConvertSnakeCaseToPascalCase($key);
+                $key              = SeqCompactJsonFormatter::ConvertSnakeCaseToPascalCase($key);
                 $normalized[$key] = $value;
             }
         }

@@ -5,10 +5,10 @@ namespace Msschl\Monolog\Handler;
 use Http\Client\HttpClient;
 use Http\Message\MessageFactory;
 use Monolog\Formatter\FormatterInterface;
+use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
 use Msschl\Monolog\Formatter\SeqBaseFormatter;
 use Msschl\Monolog\Formatter\SeqCompactJsonFormatter;
-use Msschl\Monolog\Handler\HttpHandler;
 
 /**
  * This file is part of the msschl\monolog-seq-handler package.
@@ -86,8 +86,8 @@ class SeqHandler extends HttpHandler
 	 *
 	 * @return string|null
 	 */
-	public function getServerUri()
-	{
+	public function getServerUri(): ?string
+    {
 		$uri = $this->getUri();
 
 		if (!empty($uri)) {
@@ -104,8 +104,8 @@ class SeqHandler extends HttpHandler
 	 *                          {@see SeqHandler}.
 	 * @return self
 	 */
-	public function setServerUri(string $uri = null)
-	{
+	public function setServerUri(string $uri = null): SeqHandler
+    {
 		if (!empty($uri)) {
 			if (!SeqHandler::endsWith($uri, '/')) {
 				$uri = $uri  . '/';
@@ -124,8 +124,8 @@ class SeqHandler extends HttpHandler
 	 *
 	 * @return string|null
 	 */
-	public function getApiKey()
-	{
+	public function getApiKey(): ?string
+    {
 		return $this->getHeader('X-Seq-ApiKey');
 	}
 
@@ -135,8 +135,8 @@ class SeqHandler extends HttpHandler
 	 * @param  string|null $apiKey The Seq API key or null.
 	 * @return self
 	 */
-	public function setApiKey(string $apiKey = null)
-	{
+	public function setApiKey(string $apiKey = null): SeqHandler
+    {
 		$this->popHeader($apiKey);
 
 		if (!empty($apiKey)) {
@@ -152,7 +152,7 @@ class SeqHandler extends HttpHandler
      * @param  FormatterInterface $formatter The formatter of type SeqBaseFormatter.
      * @return self
      */
-    public function setFormatter(FormatterInterface $formatter)
+    public function setFormatter(FormatterInterface $formatter): HandlerInterface
     {
     	if (!($formatter instanceof SeqBaseFormatter)) {
     		throw new \InvalidArgumentException('SeqBaseFormatter expected, got ' . gettype($formatter) . ' / ' . get_class($formatter));
@@ -168,7 +168,7 @@ class SeqHandler extends HttpHandler
 	/**
      * Gets the default formatter.
      *
-     * @return \Msschl\Monolog\Formatter\SeqCompactJsonFormatter
+     * @return SeqCompactJsonFormatter
      */
     protected function getDefaultFormatter() : FormatterInterface
     {
@@ -186,8 +186,8 @@ class SeqHandler extends HttpHandler
      * @param  string|null $needle   The searched value.
      * @return bool
      */
-    private static function endsWith(string $haystack, string $needle = null)
-	{
+    private static function endsWith(string $haystack, string $needle = null): bool
+    {
     	$length = strlen($needle);
 
     	return $length === 0 || (substr($haystack, -$length) === $needle);
