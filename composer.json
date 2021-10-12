@@ -21,7 +21,7 @@
     "php-http/client-implementation": "^1.0",
     "php-http/httplug": "^2.20",
     "monolog/monolog": "^2.3",
-    "msschl/monolog-http-handler": "dev-master"
+    "msschl/monolog-http-handler": "dev-feature/php-8"
   },
   "require-dev": {
     "php-http/mock-client": "^1.0",
